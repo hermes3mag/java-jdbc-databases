@@ -53,14 +53,13 @@ public class Database {
      * @throws SQLException In case of a database error
      */
     public Connection getConnection() throws SQLException {
-        try (Connection connection = DriverManager.getConnection(url)) {
+        Connection connection = DriverManager.getConnection(url, user, password);
 
-            if (!isInitialized && connection != null) {
-                initializeDatabase(connection);
-                isInitialized = true;
-            }
-
-            return connection;
+        if(!isInitialized && connection != null) {
+            initializeDatabase(connection);
+            isInitialized = true;
         }
+
+        return connection;
     }
 }
