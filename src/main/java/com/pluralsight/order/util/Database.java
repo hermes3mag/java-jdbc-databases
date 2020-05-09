@@ -5,6 +5,7 @@ import org.h2.tools.RunScript;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
@@ -13,6 +14,9 @@ import java.sql.SQLException;
 public class Database {
     private static Database instance = null;
     private static boolean isInitialized = false;
+    private String url = "jdbc:h2:mem:orders;DB_CLOSE_DELAY=-1";
+    private String user = "sa";
+    private String password = "";
 
     /**
      * Private constructor
@@ -49,13 +53,14 @@ public class Database {
      * @throws SQLException In case of a database error
      */
     public Connection getConnection() throws SQLException {
-        Connection connection = null;
+        try (Connection connection = DriverManager.getConnection(url)) {
 
-        if(!isInitialized && connection != null) {
-            initializeDatabase(connection);
-            isInitialized = true;
+            if (!isInitialized && connection != null) {
+                initializeDatabase(connection);
+                isInitialized = true;
+            }
+
+            return connection;
         }
-
-        return connection;
     }
 }
