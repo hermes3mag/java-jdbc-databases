@@ -5,10 +5,7 @@ import com.pluralsight.order.dto.ParamsDto;
 import com.pluralsight.order.util.Database;
 import com.pluralsight.order.util.ExceptionHandler;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * DAO to get an order
@@ -39,10 +36,15 @@ public class GetOrderDao {
             ResultSet rs = createResultSet(ps);
 
             while(rs.next()){
-                orderDto.setOrderId(rs.getLong("order_id"));
-                orderDto.setCustomerId(rs.getLong("order_customer_id"));
-                orderDto.setDate(rs.getDate("order_date"));
-                orderDto.setStatus(rs.getString("order_status"));
+                Long orderId = rs.getLong("order_id");
+                Long customerId = rs.getLong("order_customer_id");
+                Date orderDate = rs.getDate("order_date");
+                String orderStatus = rs.getString("order_status");
+
+                orderDto.setOrderId(orderId);
+                orderDto.setCustomerId(customerId);
+                orderDto.setDate(orderDate);
+                orderDto.setStatus(orderStatus);
             }
 
         } catch (SQLException ex) {
@@ -73,7 +75,7 @@ public class GetOrderDao {
      */
     private ResultSet createResultSet(PreparedStatement ps) throws SQLException {
 
-        ResultSet rs = ps.executeQuery(query);
+        ResultSet rs = ps.executeQuery();
         return rs;
     }
 }
