@@ -36,33 +36,46 @@ public class InsertOrderDao {
     public long insertOrder(OrderDto orderDto) {
         long orderId = -1;
 
-        try (Connection con = null;
+        try (Connection con = database.getConnection();
              PreparedStatement ps = createOrderPreparedStatement(con, orderDto)
         ) {
+            con.setAutoCommit(false);
+            ps.executeUpdate();
 
-
-
-            try (ResultSet result = null) {
+            try (ResultSet result = ps.getGeneratedKeys()) {
                 if(result != null) {
                     if(!result.next()){
-
+                        con.rollback();
                     } else {
+                        orderId = result.getLong("order_id");
 
 
                         for (OrderDetailDto orderDetailDto : orderDto.getOrderDetail()) {
                             orderDetailDto.setOrderId(orderId);
 
                             try (PreparedStatement detailsPS =
-                                         createOrderDetailPreparedStatement(con, orderDetailDto)) {
+                                         createOrderDetailPreparedStatement(con, orderDetailDto)
+                            ) {
+                                int rs = detailsPS.executeUpdate();
+
+                                if (rs != 1){
+                                    con.rollback();
+                                    orderId = -1;
+                                }
+
+
+                            }  catch (SQLException ex) {
 
                             }
                         }
+                        con.commit();
 
                     }
                 }
             } catch(SQLException ex) {
 
                 ExceptionHandler.handleException(ex);
+                con.rollback();
             }
         } catch (SQLException ex) {
             ExceptionHandler.handleException(ex);
@@ -79,8 +92,12 @@ public class InsertOrderDao {
      * @throws SQLException In case of an error
      */
     private PreparedStatement createOrderPreparedStatement(Connection con, OrderDto orderDto) throws SQLException {
+        PreparedStatement ps = con.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
 
-        return null;
+        ps.setLong(1, orderDto.getCustomerId());
+        ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+        ps.setString(3, "created");
+        return ps;
     }
 
     /**
@@ -91,7 +108,11 @@ public class InsertOrderDao {
      * @throws SQLException In case of an error
      */
     private PreparedStatement createOrderDetailPreparedStatement(Connection con, OrderDetailDto orderDetailDto) throws SQLException {
+        PreparedStatement ps = con.prepareStatement(sqlOrderDetail);
 
-        return null;
+        ps.setLong(1, orderDetailDto.getOrderId());
+        ps.setLong(2, orderDetailDto.getProductId());
+        ps.setInt(3, orderDetailDto.getQuantity());
+        return ps;
     }
 }
